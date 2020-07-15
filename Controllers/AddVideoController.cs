@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
+using Bundeswort.Scraper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
@@ -10,29 +12,19 @@ namespace Bundeswort.Controllers
     [Route("api/[controller]")]
     public class AddVideoController : ControllerBase
     {
-        private static readonly string[] Videos = new[]
-        {
-            "MMV8Sy1wGNg",
-            "fIQLH6Qf2-g",
-            "z1A1dP0-rxE",
-            "i0Uw7-MpfqQ",
-            "PfApuJGnpwo",
-            "BWVpbudAlVc",
-            "4HLqMfy_gMA",
-            "hqoSs7nc0Pk",
-            "XQX_MyM0Yz4"
-        };
+        private readonly ILogger<AddVideoController> _logger;
 
-        private readonly ILogger<SearchController> _logger;
-
-        public AddVideoController(ILogger<SearchController> logger)
+        public AddVideoController(ILogger<AddVideoController> logger)
         {
             _logger = logger;
         }
 
         [HttpPost]
-        public void AddVideo([FromBody] VideoDetails VideoDetails)
+        public async Task<int> AddVideo([FromBody] VideoDetails videoDetails)
         {
+            CaptionsScraper scraper = new CaptionsScraper(new Client());
+            var res = await scraper.Scrap(videoDetails.VideoId, new string[] { videoDetails.Language.ToLower() });
+            return res.Count;
         }
     }
 
