@@ -7,6 +7,7 @@ using Bundeswort.Scraper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
+using MongoDB.Driver;
 
 namespace Bundeswort.Controllers
 {
@@ -27,7 +28,7 @@ namespace Bundeswort.Controllers
         public async Task<int> AddVideo([FromBody] VideoDetails videoDetails)
         {
             var cached = await distributedCache.GetAsync(videoDetails.VideoId);
-            if(cached == null)
+            if (cached == null)
             {
                 CaptionsScraper scraper = new CaptionsScraper(new Client());
                 var res = await scraper.Scrap(videoDetails.VideoId, new string[] { videoDetails.Language.ToLower() });
@@ -35,6 +36,18 @@ namespace Bundeswort.Controllers
                 .SetSlidingExpiration(TimeSpan.FromDays(1))
                 .SetAbsoluteExpiration(TimeSpan.FromDays(6));
                 await distributedCache.SetAsync(videoDetails.VideoId, Encoding.UTF8.GetBytes("true"), options);
+
+                var mongo = new MongoClient("mongodb://root:example@localhost:27017");
+                var db = mongo.GetDatabase("MyHelloWorldDb");
+
+                var collection = db.GetCollection<VideoCaptionParts>("myHelloWorldCollection");
+
+                foreach (var item in res)
+                {
+                    var vcp = new VideoCaptionParts { CaptionParts = item.CaptionParts, VideoId = videoDetails.VideoId };
+
+                    await collection.InsertOneAsync(vcp);
+                }
                 return res.Count;
             }
             else
