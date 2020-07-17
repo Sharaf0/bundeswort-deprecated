@@ -8,8 +8,8 @@ services:
       MONGO_INITDB_ROOT_PASSWORD: example
     ports:
       - 27017:27017
-    volumes:
-      - ./mongodbdata:/data/db
+    #volumes:
+    #  - ./mongodbdata:/data/db
   mongo-express:
     image: mongo-express
     restart: always
@@ -32,8 +32,9 @@ services:
       POSTGRES_USER: root
       POSTGRES_PASSWORD: example
       POSTGRES_DB: documentsDB
-    volumes:
-      - ./postgres-data:/var/lib/postgresql/data
+    ports:
+      - 5432:5432
+
   adminer:
     image: adminer
     restart: always

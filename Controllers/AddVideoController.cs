@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
+using Scraper;
 
 namespace Bundeswort.Controllers
 {
@@ -17,11 +18,13 @@ namespace Bundeswort.Controllers
     {
         private readonly ILogger<AddVideoController> _logger;
         private readonly IDistributedCache distributedCache;
+        private readonly DocumentsDbContext context;
 
-        public AddVideoController(ILogger<AddVideoController> logger, IDistributedCache distributedCache)
+        public AddVideoController(ILogger<AddVideoController> logger, IDistributedCache distributedCache, DocumentsDbContext context)
         {
             this._logger = logger;
             this.distributedCache = distributedCache;
+            this.context = context;
         }
 
         [HttpPost]
@@ -47,7 +50,13 @@ namespace Bundeswort.Controllers
                     var vcp = new VideoCaptionParts { CaptionParts = item.CaptionParts, VideoId = videoDetails.VideoId };
 
                     await collection.InsertOneAsync(vcp);
+
+                    await context.Documents.AddAsync(new VideoDocument { Document = item.FullText, Language = item.Language, VideoId = videoDetails.VideoId });
+                    await context.SaveChangesAsync();
                 }
+
+
+
                 return res.Count;
             }
             else
