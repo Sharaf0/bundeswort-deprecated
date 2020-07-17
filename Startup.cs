@@ -37,11 +37,19 @@ namespace Bundeswort
 
             services.AddMemoryCache();
             services.AddStackExchangeRedisCache(options => options.Configuration = "localhost:6379");
+
+            services.AddMvc().AddControllersAsServices();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
+            using (var serviceScope = app.ApplicationServices.GetService<IServiceScopeFactory>().CreateScope())
+            {
+                var context = serviceScope.ServiceProvider.GetRequiredService<VideosDbContext>();
+                context.Database.Migrate();
+            }
+
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
@@ -75,6 +83,8 @@ namespace Bundeswort
                     spa.UseReactDevelopmentServer(npmScript: "start");
                 }
             });
+
+            ApplicationDbInitializer.SeedVideos(Configuration, app.ApplicationServices);
         }
     }
 }

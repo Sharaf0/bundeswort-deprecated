@@ -12,9 +12,6 @@ https://docs.docker.com/get-docker/
 
 - Add **postgres** as a **localhost** in /etc/hosts
 
-## Create/Update Database (should not be a step in the future):
-dotnet ef database update
-
 ## How to run?
 * docker-compose up -d
 * dotnet watch run
