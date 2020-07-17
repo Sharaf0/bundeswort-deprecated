@@ -7,7 +7,6 @@ using Bundeswort.Scraper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
-using MongoDB.Driver;
 using Scraper;
 
 namespace Bundeswort.Controllers
@@ -18,9 +17,9 @@ namespace Bundeswort.Controllers
     {
         private readonly ILogger<AddVideoController> _logger;
         private readonly IDistributedCache distributedCache;
-        private readonly DocumentsDbContext context;
+        private readonly VideosDbContext context;
 
-        public AddVideoController(ILogger<AddVideoController> logger, IDistributedCache distributedCache, DocumentsDbContext context)
+        public AddVideoController(ILogger<AddVideoController> logger, IDistributedCache distributedCache, VideosDbContext context)
         {
             this._logger = logger;
             this.distributedCache = distributedCache;
@@ -40,24 +39,23 @@ namespace Bundeswort.Controllers
                 .SetAbsoluteExpiration(TimeSpan.FromDays(6));
                 await distributedCache.SetAsync(videoDetails.VideoId, Encoding.UTF8.GetBytes("true"), options);
 
-                var mongo = new MongoClient("mongodb://root:example@localhost:27017");
-                var db = mongo.GetDatabase("MyHelloWorldDb");
-
-                var collection = db.GetCollection<VideoCaptionParts>("myHelloWorldCollection");
-
                 foreach (var item in res)
                 {
-                    var vcp = new VideoCaptionParts { CaptionParts = item.CaptionParts, VideoId = videoDetails.VideoId };
-
-                    await collection.InsertOneAsync(vcp);
-
-                    await context.Documents.AddAsync(new VideoDocument { Document = item.FullText, Language = item.Language, VideoId = videoDetails.VideoId });
-                    await context.SaveChangesAsync();
+                    await context.Videos.AddAsync(new Video { VideoId = videoDetails.VideoId, Language = videoDetails.Language });
+                    foreach (var cp in item.CaptionParts)
+                    {
+                        await context.Captions.AddAsync(
+                            new Caption
+                            {
+                                VideoId = videoDetails.VideoId,
+                                Text = cp.Text,
+                                Start = cp.Start,
+                                Duration = cp.Duration,
+                            }
+                        );
+                    }
                 }
-
-
-
-                return res.Count;
+                return await context.SaveChangesAsync();
             }
             else
             {

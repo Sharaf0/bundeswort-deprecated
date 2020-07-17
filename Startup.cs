@@ -30,7 +30,7 @@ namespace Bundeswort
             {
                 configuration.RootPath = "ClientApp/build";
             });
-            services.AddDbContextPool<DocumentsDbContext>(options =>
+            services.AddDbContextPool<VideosDbContext>(options =>
             {
                 options.UseNpgsql(Configuration.GetConnectionString("MyWebApiConection"));
             });

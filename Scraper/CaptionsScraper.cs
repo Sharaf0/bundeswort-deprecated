@@ -32,7 +32,6 @@ namespace Bundeswort.Scraper
                 lst.Add(new VideoCaption
                 {
                     CaptionParts = cps,
-                    FullText = fullText,
                     Language = language
                 });
 
