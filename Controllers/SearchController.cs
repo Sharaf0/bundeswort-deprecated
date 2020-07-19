@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Scraper;
 
@@ -23,10 +24,19 @@ namespace Bundeswort.Controllers
         [HttpGet("{query}")]
         public IEnumerable<VideoResult> Get(string query)
         {
-            return context.Captions
-            .Where(c => c.Text.ToLower().Contains(query.ToLower()))
-            .OrderBy(c => c.Start)
-            .Select(c => new VideoResult
+            //TODO: SQL Injection handling
+            List<Caption> ftsRes = new List<Caption>(), cntRes = new List<Caption>();
+            
+            var sql = string.Format(@"SELECT * FROM ""Captions"" WHERE to_tsvector(""Text"") @@ to_tsquery('{0}')", query);
+            
+            ftsRes = context.Captions.FromSqlRaw(sql).ToList();
+
+            if(ftsRes.Count == 0)
+                cntRes = context.Captions.Where(c => c.Text.ToLower().Contains(query.ToLower())).ToList();
+
+            var res = ftsRes.Union(cntRes);
+
+            return res.Select(c => new VideoResult
             {
                 VideoId = c.VideoId,
                 From = (int)Math.Floor(c.Start),

@@ -17,10 +17,19 @@ namespace Bundeswort
                 var controller = scope.ServiceProvider.GetRequiredService<AddVideoController>();
                 if (context.Videos.Count() == 0)
                 {
-                    string[] videos = { "OxfUqR1CHNA", "mTXXrqN4aYI", "kO4-RYvb9Uw", "seDN7LlXQZo", "7z8sUwtpUvY", "_slAaVmJerc", "2myOjbDmtKY", "WaDQyffikqA", "ojToYs6nCnk" };
+                    string[] videos = {
+                        "YMwWxeEbKH0",
+                        "Io7D-yR155g",
+                        "JS_ZB3ykdhE",
+                        "ZMSaEcYBixM",
+                        "0BiD9V8nPCY",
+                        "QlaeirHJpns",
+                        "yrUlgF5q6Mo",
+                        "jwhCtkssg00",
+                    };
                     foreach (var v in videos)
                     {
-                        var res = controller.AddVideo(new VideoDetails{VideoId = v, Language = "DE"}).Result;
+                        var res = controller.AddVideo(new VideoDetails { VideoId = v, Language = "EN" }).Result;
                     }
                 }
             }
