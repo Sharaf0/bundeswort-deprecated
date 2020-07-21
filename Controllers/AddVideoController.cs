@@ -7,6 +7,7 @@ using Bundeswort.Scraper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
+using Nest;
 using Scraper;
 
 namespace Bundeswort.Controllers
@@ -18,41 +19,69 @@ namespace Bundeswort.Controllers
         private readonly ILogger<AddVideoController> _logger;
         private readonly IDistributedCache distributedCache;
         private readonly VideosDbContext context;
+        private readonly ElasticClient esClient;
 
-        public AddVideoController(ILogger<AddVideoController> logger, IDistributedCache distributedCache, VideosDbContext context)
+        public AddVideoController(ILogger<AddVideoController> logger, IDistributedCache distributedCache, VideosDbContext context, ElasticClient esClient)
         {
             this._logger = logger;
             this.distributedCache = distributedCache;
             this.context = context;
+            this.esClient = esClient;
         }
 
         [HttpPost]
-        public async Task<int> AddVideo([FromBody] VideoDetails videoDetails)
+        public async Task<int> AddVideo([FromBody] VideoDetails videoDetails, bool clear = false)
         {
+            //Check the cache
             var cached = await distributedCache.GetAsync(videoDetails.VideoId);
+
+            if (cached != null && clear)
+            {
+                await distributedCache.RemoveAsync(videoDetails.VideoId);
+                cached = await distributedCache.GetAsync(videoDetails.VideoId);
+            }
+
             if (cached == null)
             {
-                CaptionsScraper scraper = new CaptionsScraper(new Client());
-                var res = await scraper.Scrap(videoDetails.VideoId, new string[] { videoDetails.Language.ToLower() });
+                //Check the db
+                var video = context.Videos.FirstOrDefault(v => v.VideoId == videoDetails.VideoId);
+                if (video != null)
+                {
+                    if (clear)
+                    {
+                        context.Videos.Remove(video);
+                        context.Captions.RemoveRange(context.Captions.Where(c => c.VideoId == video.VideoId));
+                    }
+                    else
+                        return 0;
+                }
+                //Insert in the cache
                 var options = new DistributedCacheEntryOptions()
                 .SetSlidingExpiration(TimeSpan.FromDays(1))
                 .SetAbsoluteExpiration(TimeSpan.FromDays(6));
                 await distributedCache.SetAsync(videoDetails.VideoId, Encoding.UTF8.GetBytes("true"), options);
+
+                CaptionsScraper scraper = new CaptionsScraper(new Client());
+                var res = await scraper.Scrap(videoDetails.VideoId, new string[] { videoDetails.Language.ToLower() });
 
                 foreach (var item in res)
                 {
                     await context.Videos.AddAsync(new Video { VideoId = videoDetails.VideoId, Language = videoDetails.Language });
                     foreach (var cp in item.CaptionParts)
                     {
-                        await context.Captions.AddAsync(
+                        var caption =
                             new Caption
                             {
                                 VideoId = videoDetails.VideoId,
                                 Text = cp.Text,
                                 Start = cp.Start,
                                 Duration = cp.Duration,
-                            }
-                        );
+                            };
+                        //Insert in DB
+                        var q = await context.Captions.AddAsync(caption);
+                        await context.SaveChangesAsync();
+                        //index the caption
+                        var response = await esClient.IndexAsync(caption, idx => idx.Index("caption-index"));
                     }
                 }
                 return await context.SaveChangesAsync();

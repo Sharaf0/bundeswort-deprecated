@@ -20,24 +20,31 @@ namespace Bundeswort.Scraper
             if (string.IsNullOrWhiteSpace(videoId))
                 throw new ArgumentException("VideoId cannot be null or empty");
 
-            List<VideoCaption> lst = new List<VideoCaption>();
-
-            var urlsDictionary = await client.GetCaptionsUrls(videoId, langs);
-            foreach ((string language, string url) in urlsDictionary)
+            try
             {
-                Console.WriteLine($"Getting captions for {language}");
-
-                string xmlContent = await client.GetCaptionXmlContent(url);
-                (string fullText, List<CaptionPart> cps) = GetCaptionParts(xmlContent);
-                lst.Add(new VideoCaption
+                List<VideoCaption> lst = new List<VideoCaption>();
+                var urlsDictionary = await client.GetCaptionsUrls(videoId, langs);
+                foreach ((string language, string url) in urlsDictionary)
                 {
-                    CaptionParts = cps,
-                    Language = language
-                });
+                    Console.WriteLine($"Getting captions for {language}");
 
-                Console.WriteLine($"Getting captions for {language} | Done!");
+                    string xmlContent = await client.GetCaptionXmlContent(url);
+                    (string fullText, List<CaptionPart> cps) = GetCaptionParts(xmlContent);
+                    lst.Add(new VideoCaption
+                    {
+                        CaptionParts = cps,
+                        Language = language
+                    });
+
+                    Console.WriteLine($"Getting captions for {language} | Done!");
+                }
+                return lst;
             }
-            return lst;
+            catch (System.Exception)
+            {
+                return new List<VideoCaption>();
+            }
+
         }
 
         (string, List<CaptionPart>) GetCaptionParts(string xmlContent)
