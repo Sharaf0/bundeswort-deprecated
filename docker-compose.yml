@@ -59,6 +59,18 @@ services:
     depends_on:
       - es01
 
+  web:
+    build: .
+    ports:
+      - "5000:5000"
+      - "5001:5001"
+    depends_on:
+      - postgres
+      - es01
+      - redis
+    networks:
+      - esnet
+
 volumes:
   esdata01:
     driver: local
