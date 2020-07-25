@@ -4,11 +4,16 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Bundeswort.Scraper;
+using Google.Apis.Services;
+using Google.Apis.YouTube.v3;
+using Google.Apis.YouTube.v3.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using Nest;
 using Scraper;
+using Video = Scraper.Video;
+using Caption = Scraper.Caption;
 
 namespace Bundeswort.Controllers
 {
@@ -28,10 +33,49 @@ namespace Bundeswort.Controllers
             this.context = context;
             this.esClient = esClient;
         }
+        public Task<List<SearchResult>> GetVideosFromChannelAsync(string ytChannelId)
+        {
 
+            return Task.Run(() =>
+            {
+                List<SearchResult> res = new List<SearchResult>();
+
+                var _youtubeService = new YouTubeService(new BaseClientService.Initializer()
+                {
+                    ApiKey = "AIzaSyBEenDioENoMs9rQbve5gOKN4vJ3c-OuBc",
+                    ApplicationName = "crawler"//this.GetType().ToString()
+                });
+
+                string nextpagetoken = " ";
+
+                while (nextpagetoken != null)
+                {
+                    var searchListRequest = _youtubeService.Search.List("snippet");
+                    searchListRequest.MaxResults = 50;
+                    searchListRequest.ChannelId = ytChannelId;
+                    searchListRequest.PageToken = nextpagetoken;
+
+                    // Call the search.list method to retrieve results matching the specified query term.
+                    var searchListResponse = searchListRequest.Execute();
+
+                    // Process  the video responses 
+                    res.AddRange(searchListResponse.Items);
+
+                    nextpagetoken = searchListResponse.NextPageToken;
+
+                }
+
+                return res;
+
+            });
+        }
         [HttpPost]
         public async Task<int> AddVideo([FromBody] VideoDetails videoDetails, bool clear = false)
         {
+            if (videoDetails.ChannelId != null)
+            {
+                var results = GetVideosFromChannelAsync(videoDetails.ChannelId);
+            }
             //Check the cache
             var cached = await distributedCache.GetAsync(videoDetails.VideoId);
 

@@ -27,6 +27,15 @@ namespace Bundeswort.Controllers
         [HttpGet("{query}")]
         public IEnumerable<VideoResult> Get(string query)
         {
+            // var res = esClient.Search<Caption>(search => search
+            // .Query(q => q.Bool(b => b
+            //     .Should(
+            //         s => s.Match(m => m.Query(query).Field(f => f.Text).Boost(1.1)),
+            //         s => s.Match(m => m.Query(query).Field(f => f.Text).Fuzziness(Fuzziness.EditDistance(2)))
+            //     )
+            // ))
+            // ).Documents.ToList();
+
             var captions = esClient.Search<Caption>(s => s
                         .Size(10)
                         .Query(q => q.QueryString(
