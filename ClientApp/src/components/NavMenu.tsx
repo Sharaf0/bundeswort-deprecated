@@ -11,13 +11,10 @@ export function NavMenu() {
           <Collapse className="d-sm-inline-flex flex-sm-row-reverse" navbar>
             <ul className="navbar-nav flex-grow">
               <NavItem>
-                <NavLink tag={Link} className="text-dark" to="/">Home</NavLink>
-              </NavItem>
-              <NavItem>
                 <NavLink tag={Link} className="text-dark" to="/add-video">Add Video</NavLink>
               </NavItem>
               <NavItem>
-                <NavLink tag={Link} className="text-dark" to="/search">Seach</NavLink>
+                <NavLink tag={Link} className="text-dark" to="/">Seach</NavLink>
               </NavItem>
             </ul>
           </Collapse>
