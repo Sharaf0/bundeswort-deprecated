@@ -17,6 +17,9 @@ export function NavMenu() {
                 <NavLink tag={Link} className="text-dark" to="/add-video">Add Video</NavLink>
               </NavItem>
               <NavItem>
+                <NavLink tag={Link} className="text-dark" to="/add-channel">Add Channel</NavLink>
+              </NavItem>
+              <NavItem>
                 <NavLink tag={Link} className="text-dark" to="/search">Seach</NavLink>
               </NavItem>
             </ul>

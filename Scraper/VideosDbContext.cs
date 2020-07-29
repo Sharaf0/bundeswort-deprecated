@@ -6,6 +6,7 @@ namespace Scraper
     public class VideosDbContext : DbContext
     {
         public DbSet<Video> Videos { get; set; }
+        public DbSet<YoutubeChannel> Channels { get; set; }
         public DbSet<Caption> Captions { get; set; }
         public VideosDbContext(DbContextOptions<VideosDbContext> options) : base(options) { }
     }
@@ -14,6 +15,12 @@ namespace Scraper
         [Key]
         public string VideoId { get; set; }
         [Required]
+        public string Language { get; set; }
+    }
+    public class YoutubeChannel
+    {
+        [Key]
+        public string ChannelId { get; set; }
         public string Language { get; set; }
     }
     public class Caption
