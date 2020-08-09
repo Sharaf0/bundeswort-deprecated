@@ -34,40 +34,36 @@ namespace Bundeswort.Controllers
             this.videoController = videoController;
         }
 
-        private Task<List<SearchResult>> GetVideosFromChannelAsync(string ytChannelId)
+        private async Task<List<SearchResult>> GetVideosFromChannelAsync(string ytChannelId)
         {
-            return Task.Run(() =>
+            List<SearchResult> res = new List<SearchResult>();
+
+            var _youtubeService = new YouTubeService(new BaseClientService.Initializer()
             {
-                List<SearchResult> res = new List<SearchResult>();
-
-                var _youtubeService = new YouTubeService(new BaseClientService.Initializer()
-                {
-                    ApiKey = "AIzaSyBEenDioENoMs9rQbve5gOKN4vJ3c-OuBc",
-                    ApplicationName = "crawler"//this.GetType().ToString()
-                });
-
-                string nextpagetoken = " ";
-
-                while (nextpagetoken != null)
-                {
-                    var searchListRequest = _youtubeService.Search.List("snippet");
-                    searchListRequest.MaxResults = 50;
-                    searchListRequest.ChannelId = ytChannelId;
-                    searchListRequest.PageToken = nextpagetoken;
-
-                    // Call the search.list method to retrieve results matching the specified query term.
-                    var searchListResponse = searchListRequest.Execute();
-
-                    // Process  the video responses 
-                    res.AddRange(searchListResponse.Items);
-
-                    nextpagetoken = searchListResponse.NextPageToken;
-
-                }
-
-                return res;
-
+                ApiKey = "AIzaSyBEenDioENoMs9rQbve5gOKN4vJ3c-OuBc",
+                ApplicationName = "crawler"//this.GetType().ToString()
             });
+
+            string nextpagetoken = " ";
+
+            while (nextpagetoken != null)
+            {
+                var searchListRequest = _youtubeService.Search.List("snippet");
+                searchListRequest.MaxResults = 50;
+                searchListRequest.ChannelId = ytChannelId;
+                searchListRequest.PageToken = nextpagetoken;
+
+                // Call the search.list method to retrieve results matching the specified query term.
+                var searchListResponse = await searchListRequest.ExecuteAsync();
+
+                // Process  the video responses 
+                res.AddRange(searchListResponse.Items);
+
+                nextpagetoken = searchListResponse.NextPageToken;
+
+            }
+
+            return res;
         }
 
         [HttpPost]
@@ -90,12 +86,12 @@ namespace Bundeswort.Controllers
                 return 0;
 
             var channelVideos = await GetVideosFromChannelAsync(channelDetails.ChannelId);
-            var videos = channelVideos.Select(cv => cv.Id.VideoId).Where(v => !string.IsNullOrEmpty(v)).ToList();
+            var videosIds = channelVideos.Select(cv => cv.Id.VideoId).Where(v => !string.IsNullOrEmpty(v)).ToList();
 
             var counter = 1;
-            foreach (var video in videos)
+            foreach (var video in videosIds)
             {
-                Console.WriteLine($"Done - Video {counter++} / {videos.Count}");
+                Console.WriteLine($"Done - Video {counter++} / {videosIds.Count}");
                 await videoController.AddVideo(new VideoDetails { VideoId = video, Language = channelDetails.Language });
             }
 
@@ -104,17 +100,11 @@ namespace Bundeswort.Controllers
 
             //Insert in the cache
             var options = new DistributedCacheEntryOptions()
-            .SetSlidingExpiration(TimeSpan.FromDays(1))
-            .SetAbsoluteExpiration(TimeSpan.FromDays(6));
+            .SetSlidingExpiration(Constants.SlidingExpiration)
+            .SetAbsoluteExpiration(Constants.AbsoluteExpiration);
             await distributedCache.SetAsync(channelDetails.ChannelId, Encoding.UTF8.GetBytes("true"), options);
 
             return await context.SaveChangesAsync();
         }
-    }
-
-    public class ChannelDetails
-    {
-        public string ChannelId { get; set; }
-        public string Language { get; set; }
     }
 }

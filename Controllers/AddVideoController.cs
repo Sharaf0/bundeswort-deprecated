@@ -61,8 +61,8 @@ namespace Bundeswort.Controllers
                 }
                 //Insert in the cache
                 var options = new DistributedCacheEntryOptions()
-                .SetSlidingExpiration(TimeSpan.FromDays(1))
-                .SetAbsoluteExpiration(TimeSpan.FromDays(6));
+                .SetSlidingExpiration(Constants.SlidingExpiration)
+                .SetAbsoluteExpiration(Constants.AbsoluteExpiration);
                 await distributedCache.SetAsync(videoDetails.VideoId, Encoding.UTF8.GetBytes("true"), options);
 
                 CaptionsScraper scraper = new CaptionsScraper(new Client());
@@ -95,11 +95,5 @@ namespace Bundeswort.Controllers
                 return 0;
             }
         }
-    }
-
-    public class VideoDetails
-    {
-        public string VideoId { get; set; }
-        public string Language { get; set; }
     }
 }
