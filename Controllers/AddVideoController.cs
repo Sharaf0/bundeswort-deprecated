@@ -4,11 +4,16 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Bundeswort.Scraper;
+using Google.Apis.Services;
+using Google.Apis.YouTube.v3;
+using Google.Apis.YouTube.v3.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using Nest;
 using Scraper;
+using Video = Scraper.Video;
+using Caption = Scraper.Caption;
 
 namespace Bundeswort.Controllers
 {
@@ -28,7 +33,6 @@ namespace Bundeswort.Controllers
             this.context = context;
             this.esClient = esClient;
         }
-
         [HttpPost]
         public async Task<int> AddVideo([FromBody] VideoDetails videoDetails, bool clear = false)
         {
@@ -57,8 +61,8 @@ namespace Bundeswort.Controllers
                 }
                 //Insert in the cache
                 var options = new DistributedCacheEntryOptions()
-                .SetSlidingExpiration(TimeSpan.FromDays(1))
-                .SetAbsoluteExpiration(TimeSpan.FromDays(6));
+                .SetSlidingExpiration(Constants.SlidingExpiration)
+                .SetAbsoluteExpiration(Constants.AbsoluteExpiration);
                 await distributedCache.SetAsync(videoDetails.VideoId, Encoding.UTF8.GetBytes("true"), options);
 
                 CaptionsScraper scraper = new CaptionsScraper(new Client());
@@ -91,12 +95,5 @@ namespace Bundeswort.Controllers
                 return 0;
             }
         }
-    }
-
-    public class VideoDetails
-    {
-        public string VideoId { get; set; }
-        public string ChannelId { get; set; }
-        public string Language { get; set; }
     }
 }
