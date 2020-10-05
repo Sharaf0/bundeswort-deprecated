@@ -38,9 +38,12 @@ namespace Bundeswort
                         "zPx5N6Lh3sw",
                         "wHGqp8lz36c"
                     };
+                Console.WriteLine("Loading videos");
+                int index = 1;
                 foreach (var v in videos)
                 {
                     var res = controller.AddVideo(new VideoDetails { VideoId = v, Language = "EN" }, clear).Result;
+                    Console.WriteLine($"downloaded {index++} / {videos.Length}");
                 }
             }
         }

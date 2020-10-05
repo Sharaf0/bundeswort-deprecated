@@ -58,6 +58,19 @@ services:
       - esnet
     depends_on:
       - es01
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - 5001:5001
+      - 80:80
+    depends_on:
+      - postgres
+      - es01
+      - redis
+    networks:
+      - esnet
 
 volumes:
   esdata01:

@@ -42,7 +42,7 @@ namespace Bundeswort
             });
 
             services.AddMemoryCache();
-            services.AddStackExchangeRedisCache(options => options.Configuration = "localhost:6379");
+            services.AddStackExchangeRedisCache(options => options.Configuration = "host.docker.internal:6379");
 
             services.AddMvc().AddControllersAsServices();
 
