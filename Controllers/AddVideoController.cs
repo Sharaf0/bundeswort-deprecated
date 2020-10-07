@@ -33,6 +33,52 @@ namespace Bundeswort.Controllers
             this.context = context;
             this.esClient = esClient;
         }
+
+        private async Task<List<QueuedVideo>> GetRelatedVideos(string videoId, string language)
+        {
+            try
+            {
+                List<SearchResult> res = new List<SearchResult>();
+
+                var _youtubeService = new YouTubeService(new BaseClientService.Initializer()
+                {
+                    ApiKey = "AIzaSyBEenDioENoMs9rQbve5gOKN4vJ3c-OuBc",
+                    ApplicationName = "crawler"//this.GetType().ToString()
+                });
+
+                var searchListRequest = _youtubeService.Search.List("snippet");
+                searchListRequest.MaxResults = 10;
+                searchListRequest.Type = "video";
+                searchListRequest.RelatedToVideoId = videoId;
+                searchListRequest.RelevanceLanguage = language;
+
+                var searchListResponse = await searchListRequest.ExecuteAsync();
+
+                res.AddRange(searchListResponse.Items);
+
+                return res
+                .Where(s => s.Id != null && !string.IsNullOrEmpty(s.Id.VideoId))
+                .Select(s => new QueuedVideo
+                {
+                    VideoId = s.Id.VideoId,
+                    ChannelId = s.Snippet.ChannelId,
+                    ChannelTitle = s.Snippet.ChannelTitle,
+                    Description = s.Snippet.Description,
+                    Etag = s.Snippet.Description,
+                    HighThumbnail = s.Snippet.Thumbnails.High.Url,
+                    Language = language,
+                    PublishedAt = DateTime.Parse(s.Snippet.PublishedAt),
+                    VideoTitle = s.Snippet.Title
+                })
+                .ToList();
+            }
+            catch (System.Exception e)
+            {
+                Console.WriteLine(e.Message);
+                throw e;
+            }
+        }
+
         [HttpPost]
         public async Task<int> AddVideo([FromBody] VideoDetails videoDetails, bool clear = false)
         {
@@ -86,6 +132,20 @@ namespace Bundeswort.Controllers
                         await context.SaveChangesAsync();
                         //index the caption
                         var response = await esClient.IndexAsync(caption, idx => idx.Index("caption-index"));
+                    }
+                }
+
+                //Insert in the queue
+                var relatedVideos = await GetRelatedVideos(videoDetails.VideoId, videoDetails.Language);
+                foreach (var relatedVideo in relatedVideos)
+                {
+                    if (context.QueuedVideos.FirstOrDefault(qv => qv.VideoId == relatedVideo.VideoId) != null)
+                    {
+                        //check etags, if different, update
+                    }
+                    else
+                    {
+                        await context.QueuedVideos.AddAsync(relatedVideo);
                     }
                 }
                 return await context.SaveChangesAsync();

@@ -19,6 +19,9 @@ export function NavMenu() {
               <NavItem>
                 <NavLink tag={Link} className="text-dark" to="/search">Seach</NavLink>
               </NavItem>
+              <NavItem>
+                <NavLink tag={Link} className="text-dark" to="/queue">Queue</NavLink>
+              </NavItem>
             </ul>
           </Collapse>
         </Container>

@@ -1,3 +1,4 @@
+using System;
 using System.ComponentModel.DataAnnotations;
 using Microsoft.EntityFrameworkCore;
 
@@ -8,8 +9,30 @@ namespace Scraper
         public DbSet<Video> Videos { get; set; }
         public DbSet<YoutubeChannel> Channels { get; set; }
         public DbSet<Caption> Captions { get; set; }
+        public DbSet<QueuedVideo> QueuedVideos { get; set; }
         public VideosDbContext(DbContextOptions<VideosDbContext> options) : base(options) { }
     }
+    public class QueuedVideo
+    {
+        [Key]
+        public string VideoId { get; set; }
+        [Required]
+        public string Etag { get; set; }
+        [Required]
+        public string ChannelId { get; set; }
+        [Required]
+        public string ChannelTitle { get; set; }
+        [Required]
+        public string HighThumbnail { get; set; }
+        public string Description { get; set; }
+        [Required]
+        public string VideoTitle { get; set; }
+        [Required]
+        public DateTime PublishedAt { get; set; }
+        [Required]
+        public string Language { get; set; }
+    }
+
     public class Video
     {
         [Key]
