@@ -13,6 +13,11 @@ interface QueuedVideo {
     publishedAt: Date;
     videoId: string;
     videoTitle: string;
+    commentCount?: number;
+    dislikeCount?: number;
+    favoriteCount?: number;
+    likeCount?: number;
+    viewCount?: number;
 }
 export function Queue() {
     const [loading, setLoading] = useState<boolean>(false);
@@ -36,6 +41,13 @@ export function Queue() {
             <div key={r.videoId}>
                 <h3>{r.videoTitle}</h3>
                 <img src={r.highThumbnail} />
+                <h4>{r.videoId}</h4>
+                <h5>Comments: {r.commentCount}</h5>
+                <h5>Dislikes: {r.dislikeCount}</h5>
+                <h5>FavoriteCount: {r.favoriteCount}</h5>
+                <h5>Dislikes: {r.dislikeCount}</h5>
+                <h5>LikeCount: {r.likeCount}</h5>
+                <h5>ViewCount: {r.viewCount}</h5>
             </div>
             <br />
         </>

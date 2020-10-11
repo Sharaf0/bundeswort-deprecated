@@ -19,7 +19,7 @@ namespace Bundeswort.Controllers
         [HttpGet]
         public List<QueuedVideo> Queue()
         {
-            return this.context.QueuedVideos.ToList();
+            return this.context.QueuedVideos.ToList().OrderByDescending(x => x.ViewCount).ToList();
         }
     }
 }

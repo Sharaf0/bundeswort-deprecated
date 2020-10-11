@@ -56,8 +56,20 @@ namespace Bundeswort.Controllers
 
                 res.AddRange(searchListResponse.Items);
 
-                return res
-                .Where(s => s.Id != null && !string.IsNullOrEmpty(s.Id.VideoId))
+                var videos = res
+                .Where(s => s.Id != null && !string.IsNullOrEmpty(s.Id.VideoId)).ToList();
+                Dictionary<string, VideoStatistics> statsDict = new Dictionary<string, VideoStatistics>();
+                foreach (var video in videos)
+                {
+                    var request = _youtubeService.Videos.List("statistics");
+                    request.Id = video.Id.VideoId;
+
+                    var response = await request.ExecuteAsync();
+                    var stats = response.Items[0].Statistics;
+                    statsDict.Add(video.Id.VideoId, stats);
+                }
+
+                var queuedVideos = videos
                 .Select(s => new QueuedVideo
                 {
                     VideoId = s.Id.VideoId,
@@ -68,9 +80,16 @@ namespace Bundeswort.Controllers
                     HighThumbnail = s.Snippet.Thumbnails.High.Url,
                     Language = language,
                     PublishedAt = DateTime.Parse(s.Snippet.PublishedAt),
-                    VideoTitle = s.Snippet.Title
+                    VideoTitle = s.Snippet.Title,
+                    CommentCount = (long?)statsDict[s.Id.VideoId].CommentCount,
+                    DislikeCount = (long?)statsDict[s.Id.VideoId].DislikeCount,
+                    FavoriteCount = (long?)statsDict[s.Id.VideoId].FavoriteCount,
+                    LikeCount = (long?)statsDict[s.Id.VideoId].LikeCount,
+                    ViewCount = (long?)statsDict[s.Id.VideoId].ViewCount
                 })
                 .ToList();
+
+                return queuedVideos;
             }
             catch (System.Exception e)
             {
