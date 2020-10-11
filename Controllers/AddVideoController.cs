@@ -10,7 +10,6 @@ using Google.Apis.YouTube.v3.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
-using Nest;
 using Scraper;
 using Video = Scraper.Video;
 using Caption = Scraper.Caption;
@@ -24,14 +23,12 @@ namespace Bundeswort.Controllers
         private readonly ILogger<AddVideoController> _logger;
         private readonly IDistributedCache distributedCache;
         private readonly VideosDbContext context;
-        private readonly ElasticClient esClient;
 
-        public AddVideoController(ILogger<AddVideoController> logger, IDistributedCache distributedCache, VideosDbContext context, ElasticClient esClient)
+        public AddVideoController(ILogger<AddVideoController> logger, IDistributedCache distributedCache, VideosDbContext context)
         {
             this._logger = logger;
             this.distributedCache = distributedCache;
             this.context = context;
-            this.esClient = esClient;
         }
 
         private async Task<List<QueuedVideo>> GetRelatedVideos(string videoId, string language)
@@ -45,7 +42,6 @@ namespace Bundeswort.Controllers
                     ApiKey = "AIzaSyBEenDioENoMs9rQbve5gOKN4vJ3c-OuBc",
                     ApplicationName = "crawler"//this.GetType().ToString()
                 });
-
                 var searchListRequest = _youtubeService.Search.List("snippet");
                 searchListRequest.MaxResults = 10;
                 searchListRequest.Type = "video";
@@ -149,8 +145,6 @@ namespace Bundeswort.Controllers
                         //Insert in DB
                         var q = await context.Captions.AddAsync(caption);
                         await context.SaveChangesAsync();
-                        //index the caption
-                        var response = await esClient.IndexAsync(caption, idx => idx.Index("caption-index"));
                     }
                 }
 

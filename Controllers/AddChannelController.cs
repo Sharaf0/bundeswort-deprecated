@@ -3,17 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Bundeswort.Scraper;
 using Google.Apis.Services;
 using Google.Apis.YouTube.v3;
 using Google.Apis.YouTube.v3.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
-using Nest;
 using Scraper;
-using Video = Scraper.Video;
-using Caption = Scraper.Caption;
 
 namespace Bundeswort.Controllers
 {

@@ -1,18 +1,11 @@
-using System;
-using Elasticsearch.Net;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.SpaServices.ReactDevelopmentServer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Nest;
 using Scraper;
-using System.Linq;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace Bundeswort
 {
@@ -28,7 +21,6 @@ namespace Bundeswort
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-
             services.AddControllersWithViews();
 
             // In production, the React files will be served from this directory
@@ -45,33 +37,6 @@ namespace Bundeswort
             services.AddStackExchangeRedisCache(options => options.Configuration = "localhost:6379");
 
             services.AddMvc().AddControllersAsServices();
-
-            var client = GetElasticSearchClient(Configuration);
-            services.AddSingleton(client);
-        }
-
-        private ElasticClient GetElasticSearchClient(IConfiguration configuration)
-        {
-            var uris = Configuration
-            .GetSection("ElasticSearchConnections")
-            .AsEnumerable()
-            .Where(u => u.Value != null)
-            .Select(u => new Uri(u.Value));
-
-            var connectionPool = new SniffingConnectionPool(uris);
-            var settings = new ConnectionSettings(connectionPool).DefaultIndex("caption-index");
-
-            var client = new ElasticClient(settings);
-            // var index = await client.Indices.ExistsAsync("caption-index");
-            // if (!index.Exists)
-            // {
-            //     var response = await client.Indices.CreateAsync("caption-index", c => c
-            //                     .Map<Caption>(m => m
-            //                         .AutoMap<Caption>()
-            //                     )
-            //                 );
-            // }
-            return client;
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
