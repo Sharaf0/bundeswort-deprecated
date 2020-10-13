@@ -93,7 +93,6 @@ namespace Bundeswort.Controllers
                 throw e;
             }
         }
-
         [HttpPost]
         public async Task<int> AddVideo([FromBody] VideoDetails videoDetails, bool clear = false)
         {
