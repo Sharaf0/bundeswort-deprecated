@@ -25,7 +25,7 @@ namespace Bundeswort.Scraper
         //     Dont't get just one url per language / culture
         public async Task<Dictionary<string, string>> GetCaptionsUrls(string videoId, string[] langs)
         {
-            Console.WriteLine("Getting captions URLs");
+            Console.WriteLine($"Getting captions URLs of {videoId} for languages: {string.Join(',', langs)}");
 
             HttpClient client = new HttpClient();
             var res = await client.GetAsync(string.Format(YoutubeVideoInfo, videoId));
@@ -47,7 +47,7 @@ namespace Bundeswort.Scraper
             .GroupBy(kv => kv.Key, kv => kv.Value, (key, g) => KeyValuePair.Create(key, g.ToList()))
             .ToList();
 
-            Console.WriteLine($"Received URLs for those languages {string.Join(',', captionTracks.Select(ct => ct.Key))}");
+            Console.WriteLine($"Received URLs of {videoId} for those languages {string.Join(',', captionTracks.Select(ct => ct.Key))}");
 
             var dict = new Dictionary<string, string>(captionTracks.Select(ct => KeyValuePair.Create(ct.Key, ct.Value.First())));
             return dict;

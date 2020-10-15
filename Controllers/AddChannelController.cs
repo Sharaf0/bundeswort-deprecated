@@ -18,12 +18,12 @@ namespace Bundeswort.Controllers
     [Route("api/[controller]")]
     public class AddChannelController : ControllerBase
     {
-        private readonly ILogger<AddVideoController> _logger;
+        private readonly ILogger<AddChannelController> _logger;
         private readonly IDistributedCache distributedCache;
         private readonly VideosDbContext context;
         private readonly AddVideoController videoController;
 
-        public AddChannelController(ILogger<AddVideoController> logger, IDistributedCache distributedCache, VideosDbContext context, AddVideoController videoController)
+        public AddChannelController(ILogger<AddChannelController> logger, IDistributedCache distributedCache, VideosDbContext context, AddVideoController videoController)
         {
             this._logger = logger;
             this.distributedCache = distributedCache;

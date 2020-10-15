@@ -55,8 +55,15 @@ namespace Bundeswort.Controllers
                 var videos = res
                 .Where(s => s.Id != null && !string.IsNullOrEmpty(s.Id.VideoId)).ToList();
                 Dictionary<string, VideoStatistics> statsDict = new Dictionary<string, VideoStatistics>();
+
                 foreach (var video in videos)
                 {
+                    //If the video already parsed, don't get it again as related.
+                    if (context.Videos.Any(v => v.VideoId.Equals(video.Id.VideoId))) {
+                        video.Id.VideoId = null;
+                        continue;
+                    }
+
                     var request = _youtubeService.Videos.List("statistics");
                     request.Id = video.Id.VideoId;
 
@@ -66,6 +73,7 @@ namespace Bundeswort.Controllers
                 }
 
                 var queuedVideos = videos
+                .Where(x => x.Id.VideoId != null)
                 .Select(s => new QueuedVideo
                 {
                     VideoId = s.Id.VideoId,
@@ -117,7 +125,10 @@ namespace Bundeswort.Controllers
                         context.Captions.RemoveRange(context.Captions.Where(c => c.VideoId == video.VideoId));
                     }
                     else
+                    {
+                        Console.WriteLine($"Video {videoDetails.VideoId} is already parsed!");
                         return 0;
+                    }
                 }
                 //Insert in the cache
                 var options = new DistributedCacheEntryOptions()
@@ -164,6 +175,7 @@ namespace Bundeswort.Controllers
             }
             else
             {
+                Console.WriteLine($"Video {videoDetails.VideoId} is already parsed!");
                 return 0;
             }
         }

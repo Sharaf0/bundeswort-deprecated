@@ -26,7 +26,7 @@ namespace Bundeswort.Scraper
                 var urlsDictionary = await client.GetCaptionsUrls(videoId, langs);
                 foreach ((string language, string url) in urlsDictionary)
                 {
-                    Console.WriteLine($"Getting captions for {language}");
+                    Console.WriteLine($"Getting captions for{videoId}-{language}");
 
                     string xmlContent = await client.GetCaptionXmlContent(url);
                     (string fullText, List<CaptionPart> cps) = GetCaptionParts(xmlContent);
@@ -36,7 +36,7 @@ namespace Bundeswort.Scraper
                         Language = language
                     });
 
-                    Console.WriteLine($"Getting captions for {language} | Done!");
+                    Console.WriteLine($"Getting captions for {videoId}-{language} | Done!");
                 }
                 return lst;
             }
